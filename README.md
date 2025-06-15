@@ -24,7 +24,7 @@ echo 11 - 一键打包存档(当前文件夹）
 
 点击加入[【幸福工厂/异星工厂建造群】](https://qm.qq.com/q/8fPrHJ44G4)
 
-## 维护者联系方式 Maintainer contact information
+## 贡献者
 
-冰霜蘑菇 [QQ](https://wpa.qq.com/msgrd?v=3&uin=1056484009&site=qq&menu=yes) Simple Chinese Only
+冰霜蘑菇 武夷陵卫
 
