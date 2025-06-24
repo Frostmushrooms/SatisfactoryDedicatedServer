@@ -285,7 +285,7 @@ goto :eof
 :: 其他功能函数（如: START_TEST_SERVER, BACKUP_GAME_SAVE_FILES 等）在此处省略，需根据实际需求补充
 
 :BACKUP_GAME_SAVE_FILES
-call %~dp0program\Shut-down-the-server.bat
+call %~dp0program\BACKUP_GAME_SAVE_FILES.bat
 echo 存档已备份至program文件夹
 pause
 goto :EOF
