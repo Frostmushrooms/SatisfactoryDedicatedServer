@@ -15,7 +15,7 @@ set file_path=%~dp0server\正式版本服务器更新启动代码.bat
 set log_file=%~dp0\server\logs\SatisfactoryRestartLogsexecution_log_%date:~0,4%%date:~5,2%%date:~8,2%.log
 
 :: 检查目标文件夹是否存在
-if exist "%target_folder%" (
+if exist "%target_folder_program%" (
     echo 文件夹已存在，跳过自动更新
 ) else (
     echo 文件夹不存在，执行自动更新操作
@@ -135,14 +135,14 @@ echo     服务器管理菜单 v3.4版本
 echo     编译人：冰霜蘑菇
 echo     QQ:1056484009 QQ群:264127585
 echo ==============================
-echo 1. 立即重启正式版
-echo 2. 立即重启测试版
-echo 3. 设置正式版定时重启任务（启动之后管理菜单不可使用，如果要退出请 CTAR+C 或者关闭当前菜单，如果想同时使用其他指令，请再次打开新的管理器菜单）
-echo 4. 设置测试版定时重启任务（启动之后管理菜单不可使用，如果要退出请 CTAR+C 或者关闭当前菜单，如果想同时使用其他指令，请再次打开新的管理器菜单）
+echo 1  -  立即重启正式版
+echo 2  -  立即重启测试版
+echo 3  -  设置正式版定时重启任务（启动之后管理菜单不可使用，如果要退出请 CTAR+C 或者关闭当前菜单，如果想同时使用其他指令，请再次打开新的管理器菜单）
+echo 4  -  设置测试版定时重启任务（启动之后管理菜单不可使用，如果要退出请 CTAR+C 或者关闭当前菜单，如果想同时使用其他指令，请再次打开新的管理器菜单）
 echo 0  -  返回主菜单
 echo ==============================
 
-set /p CHOICE3=请输入选项(0-3): 
+set /p CHOICE3=请输入选项(0-4): 
 
 if "%CHOICE3%"=="1" call :RESTART_THE_official_version_immediately
 if "%CHOICE3%"=="2" call :RESTART_THE_BETA_VERSION_IMMEDIATELY
