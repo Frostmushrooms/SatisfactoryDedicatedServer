@@ -1,5 +1,17 @@
 @echo off
 setlocal enabledelayedexpansion
+title 幸福工厂服务器管理菜单
+color 0F
+
+:: 检查管理员权限
+>nul 2>&1 "%SYSTEMROOT%\system32\cacls.exe" "%SYSTEMROOT%\system32\config\system"
+if '%errorlevel%' NEQ '0' (
+    echo 正在获取管理员权限...
+    echo Set UAC = CreateObject^("Shell.Application"^) > "%temp%\getadmin.vbs"
+    echo UAC.ShellExecute "%~s0", "", "", "runas", 1 >> "%temp%\getadmin.vbs"
+    "%temp%\getadmin.vbs"
+    exit /B
+)
 
 :: 常量定义
 set CONFIG_FILE=%~dp0program\Game.ini
@@ -8,11 +20,16 @@ set SAVE_GAME_PATH=%USERPROFILE%\AppData\Local\FactoryGame\Saved\SaveGames
 set SERVER_FOLDERS=server\servercore\logs
 set target_folder_program=%~dp0program
 set target_folder_server=%~dp0server
-set STEAM_ID=526870
 set LOG_PATH=%~dp0\server\logs\SatisfactoryRestartLogs
-set RESTART_TIME=03:00
 set file_path=%~dp0server\正式版本服务器更新启动代码.bat
-set log_file=%~dp0\server\logs\SatisfactoryRestartLogsexecution_log_%date:~0,4%%date:~5,2%%date:~8,2%.log
+set file2_path=%~dp0server\测试版本服务器更新启动代码.bat
+set log_file=%~dp0\server\logs\SatisfactoryRestart\Satisfactory_Restart_Logsexecution_log_%date:~0,4%%date:~5,2%%date:~8,2%.log
+set log2_file=%~dp0\server\logs\SatisfactorybateRestart\Satisfactory_bate_Restart_Logsexecution_log_%date:~0,4%%date:~5,2%%date:~8,2%.log
+
+mkdir "%~dp0\server\logs\SatisfactoryRestart" >nul 2>nul
+mkdir "%~dp0\server\logs\SatisfactorybateRestart" >nul 2>nul
+mkdir "%~dp0\server\logs\START_TEST_SERVER" >nul 2>nul
+mkdir "%~dp0\server\logs\START_STABLE_SERVER" >nul 2>nul
 
 :: 检查目标文件夹是否存在
 if exist "%target_folder_program%" (
@@ -28,20 +45,40 @@ if exist "%target_folder_program%" (
     tar -xf "%~dp0SatisfactoryDe-dicatedServer.zip" && del "%~dp0SatisfactoryDe-dicatedServer.zip"
     echo 更新完成
 )
-pause     echo 进入服务器管理菜单
+
+:: 提示使用者是否需要更新最新版本
+set /p confirm="是否需要更新到最新版本？ (y/n): "
+if /i "%confirm%"=="y" (
+    rd /s /q "%~dp0program"
+            echo 已删除: program
+    curl -o "SatisfactoryDe-dicatedServer.zip" "http://nas.sxtvip.top:5244/d/1/update/SatisfactoryDe-dicatedServer.zip?sign=n7RvJDuPF5hBidV9iMnM9lcdbTDyd0vPXbSxImn40G0=:0"
+    if %errorlevel% neq 0 (
+        echo 下载更新失败
+       tar -xf "%~dp0SatisfactoryDe-dicatedServer.zip" && del "%~dp0SatisfactoryDe-dicatedServer.zip"
+    )
+       tar -xf "%~dp0SatisfactoryDe-dicatedServer.zip" && del "%~dp0SatisfactoryDe-dicatedServer.zip"
+    echo 更新完成
+    pause
+) else (
+    echo 操作取消
+    pause
+)
 
 :: 进入服务器管理菜单
 :MAIN_MENU
 cls
-title 服务器管理菜单
-color 09
-echo ==============================
-echo     服务器管理菜单 v3.4版本
+title 幸福工厂服务器管理菜单
+echo ============================================================
+echo     服务器管理菜单 v3.5.5版本
 echo     编译人：冰霜蘑菇
 echo     QQ:1056484009 QQ群:264127585
-echo ==============================
-echo 1  -  更新服务器
-echo 2  -  （未使用）
+echo ============================================================
+echo     v3.5.5更新内容
+echo     1.增加直接启动服务器代码，跳过更新避免多次写入影响SSD硬盘寿命
+echo     修改日期：2025-07-24-22:16
+echo ============================================================
+echo 1  -  更新/启动服务器
+echo 2  -  更新STEAMCDM
 echo 3  -  备份游戏存档
 echo 4  -  关闭服务器
 echo 5  -  打开存档
@@ -53,13 +90,13 @@ echo 10 -  修改自动保存存档数量
 echo 11 -  实时监控在线人数
 echo 12 -  设置定时重启任务
 echo 0  -  退出程序
-echo ==============================
+echo ============================================================
 
 set /p CHOICE=请输入选项(0-12): 
 
 :: 选项处理
 if "%CHOICE%"=="1" call :UPDATE_SERVER
-if "%CHOICE%"=="2" call :
+if "%CHOICE%"=="2" call :UPDATE_STEAMCDM
 if "%CHOICE%"=="3" call :BACKUP_GAME_SAVE_FILES
 if "%CHOICE%"=="4" call :SHUTDOWN_SERVER
 if "%CHOICE%"=="5" call :OPEN_SAVES
@@ -81,23 +118,26 @@ goto MAIN_MENU
 :: 进入更新服务器菜单
 :UPDATE_SERVER
 cls
-title 服务器管理菜单
-color 09
-echo ==============================
-echo     服务器管理菜单 v3.4版本
+title 幸福工厂服务器更新菜单
+echo ============================================================
+echo     服务器管理菜单 v3.5.5版本
 echo     编译人：冰霜蘑菇
 echo     QQ:1056484009 QQ群:264127585
-echo ==============================
-echo 1  -  更新并启动正式版服务器
-echo 2  -  更新并启动测试版服务器
+echo ============================================================
+echo 1  -  启动正式版服务器
+echo 2  -  启动测试版服务器
+echo 3  -  更新并启动正式版服务器
+echo 4  -  更新并启动测试版服务器
 echo 0  -  返回主菜单
-echo ==============================
+echo ============================================================
 
-set /p CHOICE2=请输入选项(0-2): 
+set /p CHOICE2=请输入选项(0-4): 
 
 :: 选项处理
-if "%CHOICE2%"=="1" call :START_STABLE_SERVER
-if "%CHOICE2%"=="2" call :START_TEST_SERVER
+if "%CHOICE2%"=="1" call :START_THE_SERVER
+if "%CHOICE2%"=="2" call :START_THE_BETA_SERVER
+if "%CHOICE2%"=="3" call :UPDATE_AND_START_THE_SERVER
+if "%CHOICE2%"=="4" call :UPDATE_AND_START_THE_BETA_SERVER
 if "%CHOICE2%"=="0" goto MAIN_MENU
 if "%CHOICE2%"=="" echo 检测到空输入！   
 
@@ -107,13 +147,26 @@ if not defined var echo 输入已清空
 goto UPDATE_SERVER
 
 :: 功能函数
-:START_STABLE_SERVER
+
+:START_THE_SERVER
+call %~dp0server\正式版本服务器启动代码.bat
+echo 执行正式版启动流程...
+pause
+goto :eof
+
+:START_THE_BETA_SERVER
+call %~dp0server\测试版本服务器启动代码.bat
+echo 执行测试版启动流程...
+pause
+goto :eof
+
+:UPDATE_AND_START_THE_SERVER
 call %~dp0server\正式版本服务器更新启动代码.bat
 echo 执行正式版启动流程...
 pause
 goto :eof
 
-:START_TEST_SERVER
+:UPDATE_AND_START_THE_BETA_SERVER
 call %~dp0server\测试版本服务器更新启动代码.bat
 echo 执行测试版启动流程...
 pause
@@ -121,26 +174,27 @@ goto :eof
 
 :: 功能函数
 :SCHEDULE_MENU
-set FILE_PATH_OFFICIAL_VERSION_IMMEDIATELY=%~dp0server\正式版本服务器更新启动代码.bat
 set "target_folder=%~dp0server"
-set log_file=%~dp0\server\logs\SatisfactoryRestartLogsexecution_log_%date:~0,4%%date:~5,2%%date:~8,2%.log
 
 :: 进入幸福工厂自定义重启菜单
 :SCHEDULE_MENU
 cls
 title 幸福工厂自定义重启菜单
-color 09
-echo ==============================
-echo     服务器管理菜单 v3.4版本
+echo ============================================================
+echo     服务器管理菜单 v3.5.5版本
 echo     编译人：冰霜蘑菇
 echo     QQ:1056484009 QQ群:264127585
-echo ==============================
+echo     在设置定时重启任务时请注意
+echo     启动之后管理菜单不可使用
+echo     如果要退出请 CTAR+C 或者关闭当前菜单
+echo     如果想同时使用其他指令，请再次打开新的管理器菜单
+echo ============================================================
 echo 1  -  立即重启正式版
 echo 2  -  立即重启测试版
-echo 3  -  设置正式版定时重启任务（启动之后管理菜单不可使用，如果要退出请 CTAR+C 或者关闭当前菜单，如果想同时使用其他指令，请再次打开新的管理器菜单）
-echo 4  -  设置测试版定时重启任务（启动之后管理菜单不可使用，如果要退出请 CTAR+C 或者关闭当前菜单，如果想同时使用其他指令，请再次打开新的管理器菜单）
+echo 3  -  设置正式版定时重启任务
+echo 4  -  设置测试版定时重启任务
 echo 0  -  返回主菜单
-echo ==============================
+echo ============================================================
 
 set /p CHOICE3=请输入选项(0-4): 
 
@@ -159,128 +213,159 @@ goto :SCHEDULE_MENU
 
 :RESTART_THE_OFFICIAL_VERSION_IMMEDIATELY
 call %~dp0server\正式版本服务器更新启动代码.bat
-echo 执行正式版重新启动流程... >> %LOG_FILE%
-echo [%date% %time%] 游戏已手动重启 >> %LOG_FILE%
+echo 执行正式版重新启动流程... 
+echo [%date% %time%] 游戏已手动重启 
 pause
 goto :eof
 
 :RESTART_THE_BETA_VERSION_IMMEDIATELY
 call %~dp0server\测试版本服务器更新启动代码.bat
-echo 执行测试版重新启动流程... >> %LOG_FILE%
-echo [%date% %time%] 游戏已手动重启 >> %LOG_FILE%
+echo 执行测试版重新启动流程...
+echo [%date% %time%] 游戏已手动重启
 pause
 goto :eof
 
 :SCHEDULE_OFFICIAL_RESTART
-set /p "target_time=请输入下次执行时间(HH:MM:SS格式): "
-set /p "max_count=请输入最大执行次数(0为无限循环): "
+set /p execute_time=请输入执行时间(格式HH:MM，如03:00):
+set /p loop_days=请输入循环天数(0表示无限循环):
+title 正式版每天%execute_time%循环重启
+color 0F
+echo [%date% %time%] 脚本启动 >> %LOG_FILE%
+echo [%date% %time%] 设置执行时间: %execute_time% >> %LOG_FILE%
+echo [%date% %time%] 设置循环天数: %loop_days% >> %LOG_FILE%
 
-echo [%date% %time%] 脚本启动，目标文件:!FILE_PATH_OFFICIAL_VERSION_IMMEDIATELY! >> !log_file!
-if not exist "!FILE_PATH_OFFICIAL_VERSION_IMMEDIATELY!" (
-    echo [%date% %time%] 错误：文件不存在 >> !log_file!
-    pause
-    exit /b 1
+:: 初始化变量
+set day_counter=0
+set last_date=
+
+:main_loop
+set current_time=%time:~0,5%
+set current_date=%date%
+
+:: 检查是否是新的一天
+if not "!last_date!"=="!current_date!" (
+    set /a day_counter+=1
+    set last_date=!current_date!
+    echo [!date! !time!] 新的一天开始，已循环天数: !day_counter! >> %LOG_FILE%
 )
-
-set counter=0
-:loop
-set /a counter+=1
 
 :wait_loop
-for /f "tokens=1-3 delims=:." %%a in ("%time%") do (
-    set current_hour=%%a
-    set current_min=%%b
-    set current_sec=%%c
+cls
+echo [%date% %time%] 当前状态: 等待执行 >> %LOG_FILE%
+echo 当前日期: %current_date%
+echo 当前时间: %current_time%
+echo 等待执行时间: %execute_time%
+echo 剩余循环天数: %loop_days% (0表示无限循环)
+echo 已循环天数: %day_counter%  (功能可能未实现)
+
+:: 每分钟检查一次时间
+ping -n 60 127.0.0.1 >nul
+set current_time=%time:~0,5%
+set current_date=%date%
+
+if "%current_time%" neq "%execute_time%" (
+    goto wait_loop
+) else (
+    echo [%date% %time%] 到达指定时间，开始执行重启 >> %LOG_FILE%
+    echo 到达指定时间！正在重新启动服务器...
+    
+    call %~dp0server\正式版本服务器更新启动代码.bat
+    
+    :: 记录执行结果
+    if %errorlevel% equ 0 (
+        echo [%date% %time%] 服务器重启成功 >> %LOG_FILE%
+    ) else (
+        echo [%date% %time%] 服务器重启失败，错误代码: %errorlevel% >> %LOG_FILE%
+    )
+    
+    :: 更新循环计数器
+    if "%loop_days%"=="0" (
+        echo [%date% %time%] 无限循环模式，继续等待下次执行 >> %LOG_FILE%
+        goto main_loop
+    ) else (
+        set /a loop_days-=1
+        if %loop_days% gtr 0 (
+            echo [%date% %time%] 剩余循环次数: %loop_days% >> %LOG_FILE%
+            goto main_loop
+        ) else (
+            echo [%date% %time%] 所有循环已完成！ >> %LOG_FILE%
+            echo 所有循环已完成！
+            pause
+        )
+    )
 )
-for /f "tokens=1-3 delims=:." %%a in ("%target_time%") do (
-    set target_hour=%%a
-    set target_min=%%b
-    set target_sec=%%c
-)
-
-if !current_hour! lss !target_hour! goto check_time
-if !current_hour! gtr !target_hour! goto next_day
-if !current_min! lss !target_min! goto check_time
-if !current_min! gtr !target_min! goto next_day
-if !current_sec! lss !target_sec! goto check_time
-
-:execute
-echo [%date% %time%] 开始第!counter!次执行 >> !log_file!
-call %~dp0server\正式版本服务器更新启动代码.bat
-echo [%date% %time%] 第!counter!次执行完成 >> !log_file!
-
-if !max_count! gtr 0 (
-    if !counter! geq !max_count! goto end
-)
-
-:next_day
-set /a target_hour+=24
-goto wait_loop
-
-:check_time
-timeout /t 1 /nobreak >nul
-goto wait_loop
-
-:end
-echo [%date% %time%] 循环执行完成，共执行!counter!次 >> !log_file!
-pause
 goto :eof
 
 :SCHEDULE_BETA_RESTART
-set /p "target_time=请输入下次执行时间(HH:MM:SS格式): "
-set /p "max_count=请输入最大执行次数(0为无限循环): "
+set /p execute2_time=请输入执行时间(格式HH:MM，如03:00):
+set /p loop2_days=请输入循环天数(0表示无限循环):
+title 测试版每天%execute_time%循环重启
+color 0F
+echo [%date% %time%] 脚本启动 >> %LOG2_FILE%
+echo [%date% %time%] 设置执行时间: %execute2_time% >> %LOG2_FILE%
+echo [%date% %time%] 设置循环天数: %loop2_days% >> %LOG2_FILE%
 
-echo [%date% %time%] 脚本启动，目标文件:!file_path_official_version_immediately! >> !log_file!
-if not exist "!file_path_official_version_immediately!" (
-    echo [%date% %time%] 错误：文件不存在 >> !log_file!
-    pause
-    exit /b 1
+:: 初始化变量
+set day2_counter=0
+set last2_date=
+
+:main2_loop
+set current2_time=%time:~0,5%
+set current2_date=%date%
+
+:: 检查是否是新的一天
+if not "!last2_date!"=="!current2_date!" (
+    set /a day2_counter+=1
+    set last2_date=!current2_date!
+    echo [!date! !time!] 新的一天开始，已循环天数: !day2_counter! >> %LOG_FILE%
 )
 
-set counter=0
-:loop
-set /a counter+=1
+:wait2_loop
+cls
+echo [%date% %time%] 当前状态: 等待执行 >> %LOG2_FILE%
+echo 当前日期: %current2_date%
+echo 当前时间: %current2_time%
+echo 等待执行时间: %execute2_time%
+echo 剩余循环天数: %loop2_days% (0表示无限循环)
+echo 已循环天数: %day2_counter%  (功能可能未实现)
 
-:wait_loop
-for /f "tokens=1-3 delims=:." %%a in ("%time%") do (
-    set current_hour=%%a
-    set current_min=%%b
-    set current_sec=%%c
+:: 每分钟检查一次时间
+ping -n 60 127.0.0.1 >nul
+set current_time=%time:~0,5%
+set current_date=%date%
+
+if "%current2_time%" neq "%execute2_time%" (
+    goto wait2_loop
+) else (
+    echo [%date% %time%] 到达指定时间，开始执行重启 >> %LOG2_FILE%
+    echo 到达指定时间！正在重新启动服务器...
+    
+    call %~dp0server\测试版本服务器更新启动代码.bat
+    
+    :: 记录执行结果
+    if %errorlevel% equ 0 (
+        echo [%date% %time%] 服务器重启成功 >> %LOG2_FILE%
+    ) else (
+        echo [%date% %time%] 服务器重启失败，错误代码: %errorlevel% >> %LOG2_FILE%
+    )
+    
+    :: 更新循环计数器
+    if "%loop2_days%"=="0" (
+        echo [%date% %time%] 无限循环模式，继续等待下次执行 >> %LOG2_FILE%
+        goto main2_loop
+    ) else (
+        set /a loop2_days-=1
+        if %loop2_days% gtr 0 (
+            echo [%date% %time%] 剩余循环次数: %loop2_days% >> %LOG2_FILE%
+            goto main2_loop
+        ) else (
+            echo [%date% %time%] 所有循环已完成！ >> %LOG2_FILE%
+            echo 所有循环已完成！
+            pause
+        )
+    )
 )
-for /f "tokens=1-3 delims=:." %%a in ("%target_time%") do (
-    set target_hour=%%a
-    set target_min=%%b
-    set target_sec=%%c
-)
-
-if !current_hour! lss !target_hour! goto check_time
-if !current_hour! gtr !target_hour! goto next_day
-if !current_min! lss !target_min! goto check_time
-if !current_min! gtr !target_min! goto next_day
-if !current_sec! lss !target_sec! goto check_time
-
-:execute
-echo [%date% %time%] 开始第!counter!次执行 >> !log_file!
-call %~dp0server\测试版本服务器更新启动代码.bat
-echo [%date% %time%] 第!counter!次执行完成 >> !log_file!
-
-if !max_count! gtr 0 (
-    if !counter! geq !max_count! goto end
-)
-
-:next_day
-set /a target_hour+=24
-goto wait_loop
-
-:check_time
-timeout /t 1 /nobreak >nul
-goto wait_loop
-
-:end
-echo [%date% %time%] 循环执行完成，共执行!counter!次 >> !log_file!
-pause
 goto :eof
-
 
 :: 其他功能函数（如: START_TEST_SERVER, BACKUP_GAME_SAVE_FILES 等）在此处省略，需根据实际需求补充
 
@@ -415,4 +500,10 @@ call %~dp0server\monitor_players.bat
 echo 启动完成
 pause 
 goto :EOF
+
+:UPDATE_STEAMCDM
+call %~dp0server\STEAMCMD.bat
+echo 执行STEAMCMD启动流程...
+pause
+goto :eof
 
