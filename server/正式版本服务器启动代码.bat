@@ -11,38 +11,6 @@ if '%errorlevel%' NEQ '0' (
     exit /B
 )
 
-:: 设置路径变量
-set "STEAMCMD_DIR=%~dp0servercore\steamcmd"
-set "SERVER_DIR=%~dp0servercore\servercore7777"
-
-:: 创建目录并下载SteamCMD
-if not exist "%STEAMCMD_DIR%" mkdir "%STEAMCMD_DIR%"
-cd /d "%STEAMCMD_DIR%"
-if not exist steamcmd.zip (
-    curl -o "steamcmd.zip" "https://steamcdn-a.akamaihd.net/client/installer/steamcmd.zip"
-    if %errorlevel% neq 0 (
-        echo 下载SteamCMD失败
-        exit /b 1
-    )
-    tar -xf steamcmd.zip
-)
-
-:: 停止现有服务器进程
-taskkill /IM FactoryServer-Win64-Shipping-Cmd.exe /F >nul 2>&1
-for /f "tokens=2" %%i in ('tasklist /v ^| findstr /c:"FactoryServerDaemon"') do (
-    echo 停止守护进程 PID: %%i
-    taskkill /PID %%i /F
-)
-
-:: 更新服务器
-"%STEAMCMD_DIR%/steamcmd.exe" +force_install_dir "%SERVER_DIR%" +login anonymous +app_update 1690800 -beta public validate +quit
-
-echo 服务器更新完成
-
-
-@echo off
-setlocal enabledelayedexpansion
-
 title 幸福工厂服务器正式版守护进程
 color 0F
 
