@@ -4,12 +4,16 @@ setlocal enabledelayedexpansion
 :: 检查管理员权限
 >nul 2>&1 "%SYSTEMROOT%\system32\cacls.exe" "%SYSTEMROOT%\system32\config\system"
 if '%errorlevel%' NEQ '0' (
-   :: echo 需要管理员权限...
+    echo 正在获取管理员权限...
     echo Set UAC = CreateObject^("Shell.Application"^) > "%temp%\getadmin.vbs"
     echo UAC.ShellExecute "%~s0", "", "", "runas", 1 >> "%temp%\getadmin.vbs"
     "%temp%\getadmin.vbs"
     exit /B
 )
+title 服务器玩家实时监测
+color 0F
+
+mkdir "%~dp0logs\monitor_players" >nul 2>nul
 
 :: 配置日志文件路径
 set LOG_PATH="%~dp0servercore\servercore7777\FactoryGame\Saved\Logs\FactoryGame.log"
@@ -17,6 +21,20 @@ set TEMP_FILE="%temp%\satisfactory_counter.tmp"
 set player_count=0
 set TEMP_JOIN="%temp%\players_join.tmp"
 set TEMP_LEAVE="%temp%\players_leave.tmp"
+set LOG2_PATH="%~dp0servercore\servercore7777\FactoryGame\Saved\Logs\FactoryGame.log"
+set log_file=%~dp0logs\monitor_players\%date:~0,4%%date:~5,2%%date:~8,2%_%hour%%time:~3,2%%time:~6,2%.log
+
+:: 日志大小限制(单位:MB)
+set MAX_LOG_SIZE=2
+set MAX_LOG_BYTES=2097152
+
+:: 检查日志大小并轮转
+for %%F in ("%log_file%") do (
+   if %%~zF geq !MAX_LOG_BYTES! (
+      move "%log_file%" "%~dp0logs\monitor_players\archive_%date:~0,4%%date:~5,2%%date:~8,2%_%time:~0,2%%time:~3,2%.log"
+      type nul > "%log_file%"
+   )
+)
 
 
 :monitor_loop
@@ -54,7 +72,8 @@ for /f "tokens=2 delims==" %%b in ('findstr /i "MaxPlayers" "%~dp0servercore\ser
 set /a player_count=!JOINS!-!LEAVES!
 
 :: 显示统计信息
-echo 当前在线玩家: !player_count!/!player! 人
+echo %date:~0,11%%time% 当前在线玩家: !player_count!/!player! 人 >> %log_file%
+echo 当前在线玩家: !player_count!/!player! 人 
 echo [登录:!JOINS! 退出:!LEAVES!]
 :: echo !player1! 已加入
 echo ----------------------------------
